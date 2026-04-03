@@ -1,0 +1,45 @@
+default_stages: [commit, push]  # This makes all hooks run on both
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        name: check yaml
+        args: ['--allow-multiple-documents']
+        # The key is to ensure the regex matches the hidden dot
+        files: ^\.?.*\.(yaml|yml)$
+        pass_filenames: true
+
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format .
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix .
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+
+      - id: ty-check
+        name: ty check
+        entry: uv run ty check .
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest-push
+        name: pytest (pre-push)
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
