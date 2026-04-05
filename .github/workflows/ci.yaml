@@ -31,7 +31,7 @@ jobs:
         run: uv run ty check .
 
       - name: Run Tests
-        run: uv run pytest -s
+        run: uv run pytest -s --cov-fail-under=90 *.py
 
           #       - name: Update Benchmark History
           #         if: github.ref == 'refs/heads/master' # Only track history on master
