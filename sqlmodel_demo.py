@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Sequence
 from enum import StrEnum, auto
-from sqlmodel import Field, Relationship, Session, SQLModel, create_engine
+from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 
 
 class Category(StrEnum):
@@ -27,6 +27,24 @@ class Expense(SQLModel, table=True):
 
     # Relationship: Each expense belongs to one owner
     owner: User = Relationship(back_populates="expenses")
+
+
+class ExpenseRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def add(self, expense: Expense) -> Expense:
+        self.session.add(expense)
+        # We don't commit here; we let the "Unit of Work"
+        # (the session owner) decide when to commit.
+        return expense
+
+    def get_by_user(self, user_id: int) -> Sequence[Expense]:
+        statement = select(Expense).where(Expense.user_id == user_id)
+        return self.session.exec(statement).all()
+
+    def get_all(self) -> Sequence[Expense]:
+        return self.session.exec(select(Expense)).all()
 
 
 # Database Setup
