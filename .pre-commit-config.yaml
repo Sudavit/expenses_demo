@@ -8,7 +8,8 @@ repos:
         name: check yaml
         args: ['--allow-multiple-documents']
         # The key is to ensure the regex matches the hidden dot
-        files: ^\.?.*\.(yaml|yml)$
+        # files: ^\.?.*\.(yaml|yml)$
+        files: \.(yaml|yml)$
         pass_filenames: true
 
   - repo: local
