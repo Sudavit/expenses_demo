@@ -23,7 +23,7 @@ class Expense(SQLModel, table=True):
     category: Category  # Uses our StrEnum
 
     # Foreign Key linking to User
-    user_id: int = Field(foreign_key="user.id")
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
 
     # Relationship: Each expense belongs to one owner
     owner: User = Relationship(back_populates="expenses")
@@ -46,8 +46,9 @@ def demo_relationship():
         session.commit()
         session.refresh(me)
 
-        print(f"User: {me.username}")
+        print(f"User: {me.username} {me.id}")
         print(f"Expenses: {[e.category for e in me.expenses]}")
+        print(f"Billed: {api_bill.amount}")
 
 
 if __name__ == "__main__":
