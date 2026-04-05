@@ -1,7 +1,7 @@
-from typing import List, Optional, Sequence, Any, Union
+from typing import List, Optional, Sequence, Any, Union, cast
 from enum import StrEnum, auto
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pydantic import field_validator
 
 
@@ -20,30 +20,32 @@ class User(SQLModel, table=True):
 
 class Expense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    # Use Decimal for financial precision
-    # max_digits and decimal_places are recommended for the DB schema
-    amount: Decimal = Field(
+
+    # Update 1: Hint that we accept multiple types for 'amount'
+    amount: Union[Decimal, float, str] = Field(
         default=Decimal("0.00"),
-        max_digits=10,  # wishful thinking
+        max_digits=10,
         decimal_places=2,
         sa_column_kwargs={"nullable": False},
     )
+
     category: Category
-    # Enforce relationship at DB level
-    user_id: int = Field(foreign_key="user.id", nullable=False)
+
+    # Update 2: Set a default of None so it's optional in the constructor,
+    # but keep nullable=False so it's required in the database.
+    user_id: int = Field(
+        default=None, foreign_key="user.id", sa_column_kwargs={"nullable": False}
+    )
+
     owner: User = Relationship(back_populates="expenses")
 
     @field_validator("amount", mode="before")
     @classmethod
-    def coerce_to_decimal(cls, v: Union[Decimal, float, str]) -> Decimal:
+    def coerce_to_decimal(cls, v: Any) -> Decimal:
         """Automatically convert strings or floats to Decimal."""
         if isinstance(v, Decimal):
             return v
-        try:
-            # We convert to string first to avoid float precision artifacts
-            return Decimal(str(v))
-        except (InvalidOperation, ValueError):
-            raise ValueError(f"Invalid amount: {v}. Must be a numeric value.")
+        return Decimal(str(v))
 
 
 class ExpenseRepository:
@@ -68,10 +70,13 @@ class ExpenseRepository:
     def add_all(self, expenses: list[Expense]) -> None:
         self.session.add_all(expenses)
 
+    # Inside your ExpenseRepository:
     def total_for_user(self, user: User) -> Decimal:
         """Calculate the exact sum for a user's expenses."""
         expenses = self.get_by_user(user)
-        return sum((e.amount for e in expenses), Decimal("0.00"))
+        # Cast the final result to Decimal to satisfy the Inspector
+        total = sum((e.amount for e in expenses), Decimal("0.00"))
+        return cast(Decimal, total)
 
 
 # Database Setup

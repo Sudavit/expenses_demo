@@ -70,3 +70,23 @@ def test_decimal_precision(session: Session):
     session.commit()
 
     assert repo.total_for_user(user) == Decimal("30.30")
+
+
+def test_total_for_user_accuracy(session: Session):
+    repo = ExpenseRepository(session)
+    user = User(username="Galfridus")
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    # 1. Test Empty Case
+    assert repo.total_for_user(user) == Decimal("0.00")
+
+    # 2. Test Multi-item Case with precision
+    e1 = Expense(amount=10.25, category=Category.FOOD, owner=user)
+    e2 = Expense(amount=20.50, category=Category.TRAVEL, owner=user)
+    repo.add(e1)
+    repo.add(e2)
+    session.commit()
+
+    assert repo.total_for_user(user) == Decimal("30.75")
