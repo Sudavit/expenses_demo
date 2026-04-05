@@ -11,14 +11,14 @@ def test_repo_add_expense(session: Session):
     session.commit()
 
     # Action
-    expense = Expense(amount=42.0, category=Category.SOFTWARE, owner=user)
+    expense = Expense(amount=Decimal(42.0), category=Category.SOFTWARE, owner=user)
     repo.add(expense)
     session.commit()
 
     # Assert
     all_expenses = repo.get_all()
     assert len(all_expenses) == 1
-    assert all_expenses[0].amount == 42.0
+    assert all_expenses[0].amount == 42.00
     assert all_expenses[0].owner.username == "Galfridus"
 
 
@@ -33,8 +33,8 @@ def test_get_by_user_filters_correctly(session: Session):
     session.refresh(u1)
 
     # Assign expense only to User1
-    e1 = Expense(amount=10.00, category=Category.FOOD, owner=u1)
-    e2 = Expense(amount=20.00, category=Category.TRAVEL, owner=u2)
+    e1 = Expense(amount=Decimal(10.00), category=Category.FOOD, owner=u1)
+    e2 = Expense(amount=Decimal(20.00), category=Category.TRAVEL, owner=u2)
     repo.add(e1)
     repo.add(e2)
     session.commit()
@@ -50,7 +50,7 @@ def test_get_by_user_filters_correctly(session: Session):
 
 def test_category_enum_integrity(session: Session):
     # Verify that we are using the StrEnum correctly
-    expense = Expense(amount=5.00, category=Category.FOOD)
+    expense = Expense(amount=Decimal(5.00), category=Category.FOOD)
     assert expense.category == "food"
     assert isinstance(expense.category, Category)
 
@@ -83,8 +83,8 @@ def test_total_for_user_accuracy(session: Session):
     assert repo.total_for_user(user) == Decimal("0.00")
 
     # 2. Test Multi-item Case with precision
-    e1 = Expense(amount=10.25, category=Category.FOOD, owner=user)
-    e2 = Expense(amount=20.50, category=Category.TRAVEL, owner=user)
+    e1 = Expense(amount=Decimal(10.25), category=Category.FOOD, owner=user)
+    e2 = Expense(amount=Decimal(20.50), category=Category.TRAVEL, owner=user)
     repo.add(e1)
     repo.add(e2)
     session.commit()

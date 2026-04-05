@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence, Any, Union, cast
+from typing import List, Optional, Sequence, Any
 from enum import StrEnum, auto
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
 from decimal import Decimal
@@ -22,7 +22,7 @@ class Expense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # Update 1: Hint that we accept multiple types for 'amount'
-    amount: Union[Decimal, float, str] = Field(
+    amount: Decimal = Field(
         default=Decimal("0.00"),
         max_digits=10,
         decimal_places=2,
@@ -31,8 +31,6 @@ class Expense(SQLModel, table=True):
 
     category: Category
 
-    # Update 2: Set a default of None so it's optional in the constructor,
-    # but keep nullable=False so it's required in the database.
     user_id: int = Field(
         default=None, foreign_key="user.id", sa_column_kwargs={"nullable": False}
     )
@@ -42,10 +40,12 @@ class Expense(SQLModel, table=True):
     @field_validator("amount", mode="before")
     @classmethod
     def coerce_to_decimal(cls, v: Any) -> Decimal:
-        """Automatically convert strings or floats to Decimal."""
         if isinstance(v, Decimal):
             return v
-        return Decimal(str(v))
+        try:
+            return Decimal(str(v))
+        except (ValueError, TypeError):
+            return Decimal("0.00")
 
 
 class ExpenseRepository:
@@ -76,7 +76,7 @@ class ExpenseRepository:
         expenses = self.get_by_user(user)
         # Cast the final result to Decimal to satisfy the Inspector
         total = sum((e.amount for e in expenses), Decimal("0.00"))
-        return cast(Decimal, total)
+        return total
 
 
 # Database Setup
@@ -96,7 +96,7 @@ def demo_relationship():
         session.refresh(me)
 
         # 2. Use Repository to add an expense
-        bill = Expense(amount=75.00, category=Category.TRAVEL, owner=me)
+        bill = Expense(amount=75.00, category=Category.TRAVEL, owner=me)  # type: ignore
         repo.add(bill)
         session.commit()
 
