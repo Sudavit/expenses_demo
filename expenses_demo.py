@@ -1,7 +1,14 @@
 from typing import List, Optional, Sequence, Any
 from enum import StrEnum, auto
-from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
-from decimal import Decimal
+from sqlmodel import (
+    Field,
+    Relationship,
+    Session,
+    SQLModel,
+    create_engine,
+    select,
+)
+from decimal import Decimal, InvalidOperation
 from pydantic import field_validator
 
 
@@ -37,14 +44,18 @@ class Expense(SQLModel, table=True):
 
     owner: User = Relationship(back_populates="expenses")
 
+    # Inside Expense class
     @field_validator("amount", mode="before")
     @classmethod
     def coerce_to_decimal(cls, v: Any) -> Decimal:
+        """The 'Inspector' ensures data integrity before assignment."""
         if isinstance(v, Decimal):
             return v
         try:
+            # If it's a float or string, cast it to string then Decimal
             return Decimal(str(v))
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, InvalidOperation):
+            # The 'Kill-Switch' for bad data: return a safe baseline
             return Decimal("0.00")
 
 

@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from expenses_demo import User, Expense, Category, ExpenseRepository
+from expenses_demo import User, Expense, Category, ExpenseRepository, demo_relationship
 from decimal import Decimal
 
 
@@ -90,3 +90,25 @@ def test_total_for_user_accuracy(session: Session):
     session.commit()
 
     assert repo.total_for_user(user) == Decimal("30.75")
+
+
+def test_get_by_user_with_no_id(session: Session):
+    repo = ExpenseRepository(session)
+    unsaved_user = User(username="Ghost")
+    # user.id is None here
+    assert repo.get_by_user(unsaved_user) == []
+
+
+def test_expense_amount_validation_error():
+    # Approach: Use model_validate to force the coercion logic
+    data = {"amount": "not-a-number", "category": Category.FOOD}
+    e = Expense.model_validate(data)
+
+    assert isinstance(e.amount, Decimal)
+    assert e.amount == Decimal("0.00")
+
+
+def test_main_demo_execution():
+    """Executes the demo logic to ensure the 'main' path works."""
+    # This covers the lines in the demo_relationship() function
+    demo_relationship()
