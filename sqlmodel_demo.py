@@ -39,8 +39,9 @@ class ExpenseRepository:
         # (the session owner) decide when to commit.
         return expense
 
-    def get_by_user(self, user_id: int) -> Sequence[Expense]:
-        statement = select(Expense).where(Expense.user_id == user_id)
+    def get_by_user(self, user: User) -> Sequence[Expense]:
+        # Use the relationship or the ID safely
+        statement = select(Expense).where(Expense.user_id == user.id)
         return self.session.exec(statement).all()
 
     def get_all(self) -> Sequence[Expense]:
@@ -54,19 +55,23 @@ SQLModel.metadata.create_all(engine)
 
 def demo_relationship():
     with Session(engine) as session:
-        # Create a User
+        # Initialize the Repository
+        repo = ExpenseRepository(session)
+
+        # 1. Create Data
         me = User(username="Galfridus")
-
-        # Create an Expense linked to that User
-        api_bill = Expense(amount=50.0, category=Category.SOFTWARE, owner=me)
-
         session.add(me)
-        session.commit()
+        session.commit()  # Need the ID for the next step
         session.refresh(me)
 
-        print(f"User: {me.username} {me.id}")
-        print(f"Expenses: {[e.category for e in me.expenses]}")
-        print(f"Billed: {api_bill.amount}")
+        # 2. Use Repository to add an expense
+        bill = Expense(amount=75.0, category=Category.TRAVEL, owner=me)
+        repo.add(bill)
+        session.commit()
+
+        # 3. Use Repository to query
+        my_expenses = repo.get_by_user(me)
+        print(f"Found {len(my_expenses)} expenses for {me.username}")
 
 
 if __name__ == "__main__":
