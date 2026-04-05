@@ -3,7 +3,7 @@ tests/test_stub.py
 A minimalist passing test to satisfy the pre-commit gate.
 """
 
-from sqlmodel_demo import demo_relationship
+from expenses_demo import demo_relationship
 
 
 def test_relationship_logic():

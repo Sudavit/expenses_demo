@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from sqlmodel_demo import User, Expense, Category, ExpenseRepository
+from expenses_demo import User, Expense, Category, ExpenseRepository
 
 
 def test_repo_add_expense(session: Session):
