@@ -1,6 +1,8 @@
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Any, Union
 from enum import StrEnum, auto
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select
+from decimal import Decimal, InvalidOperation
+from pydantic import field_validator
 
 
 class Category(StrEnum):
@@ -12,21 +14,36 @@ class Category(StrEnum):
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
-
     # Relationship: One user has many expenses
     expenses: List["Expense"] = Relationship(back_populates="owner")
 
 
 class Expense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    amount: float
-    category: Category  # Uses our StrEnum
-
-    # Foreign Key linking to User
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-
-    # Relationship: Each expense belongs to one owner
+    # Use Decimal for financial precision
+    # max_digits and decimal_places are recommended for the DB schema
+    amount: Decimal = Field(
+        default=Decimal("0.00"),
+        max_digits=10,  # wishful thinking
+        decimal_places=2,
+        sa_column_kwargs={"nullable": False},
+    )
+    category: Category
+    # Enforce relationship at DB level
+    user_id: int = Field(foreign_key="user.id", nullable=False)
     owner: User = Relationship(back_populates="expenses")
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    def coerce_to_decimal(cls, v: Union[Decimal, float, str]) -> Decimal:
+        """Automatically convert strings or floats to Decimal."""
+        if isinstance(v, Decimal):
+            return v
+        try:
+            # We convert to string first to avoid float precision artifacts
+            return Decimal(str(v))
+        except (InvalidOperation, ValueError):
+            raise ValueError(f"Invalid amount: {v}. Must be a numeric value.")
 
 
 class ExpenseRepository:
@@ -40,12 +57,21 @@ class ExpenseRepository:
         return expense
 
     def get_by_user(self, user: User) -> Sequence[Expense]:
-        # Use the relationship or the ID safely
+        if user.id is None:
+            return []  # A non-persisted user cannot have expenses
         statement = select(Expense).where(Expense.user_id == user.id)
         return self.session.exec(statement).all()
 
     def get_all(self) -> Sequence[Expense]:
         return self.session.exec(select(Expense)).all()
+
+    def add_all(self, expenses: list[Expense]) -> None:
+        self.session.add_all(expenses)
+
+    def total_for_user(self, user: User) -> Decimal:
+        """Calculate the exact sum for a user's expenses."""
+        expenses = self.get_by_user(user)
+        return sum((e.amount for e in expenses), Decimal("0.00"))
 
 
 # Database Setup
@@ -65,7 +91,7 @@ def demo_relationship():
         session.refresh(me)
 
         # 2. Use Repository to add an expense
-        bill = Expense(amount=75.0, category=Category.TRAVEL, owner=me)
+        bill = Expense(amount=75.00, category=Category.TRAVEL, owner=me)
         repo.add(bill)
         session.commit()
 

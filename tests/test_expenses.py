@@ -1,5 +1,6 @@
 from sqlmodel import Session
 from expenses_demo import User, Expense, Category, ExpenseRepository
+from decimal import Decimal
 
 
 def test_repo_add_expense(session: Session):
@@ -32,8 +33,8 @@ def test_get_by_user_filters_correctly(session: Session):
     session.refresh(u1)
 
     # Assign expense only to User1
-    e1 = Expense(amount=10.0, category=Category.FOOD, owner=u1)
-    e2 = Expense(amount=20.0, category=Category.TRAVEL, owner=u2)
+    e1 = Expense(amount=10.00, category=Category.FOOD, owner=u1)
+    e2 = Expense(amount=20.00, category=Category.TRAVEL, owner=u2)
     repo.add(e1)
     repo.add(e2)
     session.commit()
@@ -43,12 +44,29 @@ def test_get_by_user_filters_correctly(session: Session):
 
     # Assert
     assert len(u1_expenses) == 1
-    assert u1_expenses[0].amount == 10.0
+    assert u1_expenses[0].amount == 10.00
     assert u1_expenses[0].user_id == u1.id
 
 
 def test_category_enum_integrity(session: Session):
     # Verify that we are using the StrEnum correctly
-    expense = Expense(amount=5.0, category=Category.FOOD)
+    expense = Expense(amount=5.00, category=Category.FOOD)
     assert expense.category == "food"
     assert isinstance(expense.category, Category)
+
+
+def test_decimal_precision(session: Session):
+    repo = ExpenseRepository(session)
+    user = User(username="Galfridus")
+    session.add(user)
+    session.commit()
+
+    # Always pass strings to Decimal to preserve precision
+    e1 = Expense(amount=Decimal("10.10"), category=Category.FOOD, owner=user)
+    e2 = Expense(amount=Decimal("20.20"), category=Category.FOOD, owner=user)
+
+    repo.add(e1)
+    repo.add(e2)
+    session.commit()
+
+    assert repo.total_for_user(user) == Decimal("30.30")
