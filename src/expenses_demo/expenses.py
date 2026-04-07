@@ -1,5 +1,9 @@
-from typing import List, Optional, Sequence, Any
+from collections.abc import Sequence
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum, auto
+from typing import Any
+
+from pydantic import field_validator
 from sqlmodel import (
     Field,
     Relationship,
@@ -8,8 +12,6 @@ from sqlmodel import (
     create_engine,
     select,
 )
-from decimal import Decimal, InvalidOperation
-from pydantic import field_validator
 
 
 class Category(StrEnum):
@@ -19,14 +21,14 @@ class Category(StrEnum):
 
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
     # Relationship: One user has many expenses
-    expenses: List["Expense"] = Relationship(back_populates="owner")
+    expenses: list["Expense"] = Relationship(back_populates="owner")
 
 
 class Expense(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # Update 1: Hint that we accept multiple types for 'amount'
     amount: Decimal = Field(
@@ -116,5 +118,9 @@ def demo_relationship():
         print(f"Found {len(my_expenses)} expenses for {me.username}")
 
 
-if __name__ == "__main__":
+def main():
     demo_relationship()
+
+
+if __name__ == "__main__":
+    main()

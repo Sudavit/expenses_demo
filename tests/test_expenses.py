@@ -1,6 +1,8 @@
-from sqlmodel import Session
-from expenses_demo import User, Expense, Category, ExpenseRepository, demo_relationship
 from decimal import Decimal
+
+from sqlmodel import Session
+
+from expenses_demo import Category, Expense, ExpenseRepository, User, demo_relationship
 
 
 def test_repo_add_expense(session: Session):

@@ -26,6 +26,18 @@ dev = [
     "ty>=0.0.28",
 ]
 
+[tool.ruff]
+# Match your active 3.13 environment
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+# Keep your existing selection
+select = ["F", "I", "E", "W", "UP"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=. --cov-report=term-missing --cov-report=html"
+
 [tool.coverage.run]
 source = ["."]
 omit = ["tests/*"]
@@ -38,5 +50,5 @@ exclude_lines = [
     "raise NotImplementedError",
 ]
 
-[tool.pytest.ini_options]
-addopts = "--cov=. --cov-report=term-missing --cov-report=html"
+[project.scripts]
+expenses = "expenses_demo.expenses:main"
