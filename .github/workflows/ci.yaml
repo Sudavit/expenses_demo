@@ -40,8 +40,8 @@ jobs:
       - name: Generate Coverage Badge
         if: github.ref == 'refs/heads/master'
         run: |
-          # Use 'uv run' to access the installed dev dependency
-          uv run coverage-badge -f -o coverage.svg
+          # genbadge reads coverage.xml and outputs to root
+          uv run genbadge coverage -i coverage.xml -o coverage.svg
 
       - name: Commit Badge
         if: github.ref == 'refs/heads/master'
