@@ -37,15 +37,21 @@ jobs:
       - name: Run Tests
         run: uv run pytest -s --cov-fail-under=90
 
-      - name: Pytest coverage comment
-        uses: MishaKav/pytest-coverage-comment@main
-        with:
-          pytest-xml-coverage-path: ./coverage.xml
-          title: Coverage Report
-          badge-title: Coverage
-          hide-badge: false
-          hide-report: false
-          create-new-comment: true
+      - name: Generate Coverage Badge
+        if: github.ref == 'refs/heads/master'
+        run: |
+          # Use 'uv run' to access the installed dev dependency
+          uv run coverage-badge -f -o coverage.svg
+
+      - name: Commit Badge
+        if: github.ref == 'refs/heads/master'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add coverage.svg
+          # The [skip ci] is the "Kill-Switch" to prevent infinite loops
+          git commit -m "ci: update coverage badge [skip ci]" || echo "No changes to commit"
+          git push
 
           #       - name: Update Benchmark History
           #         if: github.ref == 'refs/heads/master' # Only track history on master

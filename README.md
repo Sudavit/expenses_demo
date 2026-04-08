@@ -1,3 +1,3 @@
-![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Sudavit/expenses_demo/python-coverage-comment-action-data/endpoint.json)
+![Coverage](./coverage.svg)
 # sqlmodel
 Learning about sqlmodel
