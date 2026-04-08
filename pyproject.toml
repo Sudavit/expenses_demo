@@ -35,8 +35,20 @@ line-length = 88
 # Keep your existing selection
 select = ["F", "I", "E", "W", "UP"]
 
+[tool.ty.environment]
+# This is the most common fix for src-layout diagnostics
+# It tells ty where the 'First Party' code starts.
+extra-paths = ["src"]
+
+[tool.ty.analysis]
+# Ensure ty respects your existing type ignores from other checkers
+respect-type-ignore-comments = true
+
 [tool.pytest.ini_options]
-addopts = "--cov=. --cov-report=term-missing --cov-report=html"
+# This tells pytest: "Always look inside 'src' for my packages"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "--cov=expenses_demo --cov-report=term-missing --cov-report=html"
 
 [tool.coverage.run]
 source = ["."]
