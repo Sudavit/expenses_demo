@@ -48,7 +48,7 @@ respect-type-ignore-comments = true
 # This tells pytest: "Always look inside 'src' for my packages"
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "--cov=expenses_demo --cov-report=term-missing --cov-report=html"
+addopts = "--cov=expenses_demo --cov-report=term-missing --cov-report=html --cov-report=xml"
 
 [tool.coverage.run]
 source = ["."]

@@ -33,6 +33,16 @@ jobs:
       - name: Run Tests
         run: uv run pytest -s --cov-fail-under=90
 
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+          title: Coverage Report
+          badge-title: Coverage
+          hide-badge: false
+          hide-report: false
+          create-new-comment: true
+
           #       - name: Update Benchmark History
           #         if: github.ref == 'refs/heads/master' # Only track history on master
           #         run: |
