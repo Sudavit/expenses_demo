@@ -1,3 +1,4 @@
 ![Coverage](./coverage.svg)
-# sqlmodel
-Learning about sqlmodel
+# expenses_demo
+Prep for upcoming Agentic AI course
+Trying to remind myself how to develop.
