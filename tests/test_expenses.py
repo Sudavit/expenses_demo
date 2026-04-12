@@ -2,12 +2,18 @@ from decimal import Decimal
 
 from sqlmodel import Session
 
-from expenses_demo import Category, Expense, ExpenseRepository, User, demo_relationship
+from expenses_demo import (
+    Category,
+    Expense,
+    SQLExpenseRepository,
+    User,
+    demo_relationship,
+)
 
 
 def test_repo_add_expense(session: Session):
     # Setup
-    repo = ExpenseRepository(session)
+    repo = SQLExpenseRepository(session)
     user = User(username="Galfridus")
     session.add(user)
     session.commit()
@@ -25,7 +31,7 @@ def test_repo_add_expense(session: Session):
 
 
 def test_get_by_user_filters_correctly(session: Session):
-    repo = ExpenseRepository(session)
+    repo = SQLExpenseRepository(session)
 
     # Create two users
     u1 = User(username="User1")
@@ -58,7 +64,7 @@ def test_category_enum_integrity(session: Session):
 
 
 def test_decimal_precision(session: Session):
-    repo = ExpenseRepository(session)
+    repo = SQLExpenseRepository(session)
     user = User(username="Galfridus")
     session.add(user)
     session.commit()
@@ -75,7 +81,7 @@ def test_decimal_precision(session: Session):
 
 
 def test_total_for_user_accuracy(session: Session):
-    repo = ExpenseRepository(session)
+    repo = SQLExpenseRepository(session)
     user = User(username="Galfridus")
     session.add(user)
     session.commit()
@@ -95,7 +101,7 @@ def test_total_for_user_accuracy(session: Session):
 
 
 def test_get_by_user_with_no_id(session: Session):
-    repo = ExpenseRepository(session)
+    repo = SQLExpenseRepository(session)
     unsaved_user = User(username="Ghost")
     # user.id is None here
     assert repo.get_by_user(unsaved_user) == []

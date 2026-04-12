@@ -59,8 +59,9 @@ omit = ["tests/*"]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
-    "if __name__ == \"__main__\":",
     "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
 ]
 
 [project.scripts]

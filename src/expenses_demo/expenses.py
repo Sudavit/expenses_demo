@@ -13,6 +13,8 @@ from sqlmodel import (
     select,
 )
 
+from expenses_demo.interfaces import ExpenseRepository as IExpenseRepository
+
 
 class Category(StrEnum):
     FOOD = auto()
@@ -61,26 +63,36 @@ class Expense(SQLModel, table=True):
             return Decimal("0.00")
 
 
-class ExpenseRepository:
+class SQLExpenseRepository(
+    IExpenseRepository
+):  # Renamed and marked as implementing Protocol
     def __init__(self, session: Session):
         self.session = session
 
-    def add(self, expense: Expense) -> Expense:
+    def add(self, expense: "Expense") -> "Expense":
         self.session.add(expense)
         # We don't commit here; we let the "Unit of Work"
         # (the session owner) decide when to commit.
         return expense
 
-    def get_by_user(self, user: User) -> Sequence[Expense]:
+    def get(self, expense_id: int) -> "Expense | None":
+        """Retrieve by ID to match Protocol signature."""
+        return self.session.get(Expense, expense_id)
+
+    # Matching the Protocol's list_all requirement
+    def list_all(self) -> Sequence["Expense"]:
+        return self.get_all()
+
+    def get_by_user(self, user: User) -> Sequence["Expense"]:
         if user.id is None:
             return []  # A non-persisted user cannot have expenses
         statement = select(Expense).where(Expense.user_id == user.id)
         return self.session.exec(statement).all()
 
-    def get_all(self) -> Sequence[Expense]:
+    def get_all(self) -> Sequence["Expense"]:
         return self.session.exec(select(Expense)).all()
 
-    def add_all(self, expenses: list[Expense]) -> None:
+    def add_all(self, expenses: list["Expense"]) -> None:
         self.session.add_all(expenses)
 
     # Inside your ExpenseRepository:
@@ -100,7 +112,7 @@ SQLModel.metadata.create_all(engine)
 def demo_relationship():
     with Session(engine) as session:
         # Initialize the Repository
-        repo = ExpenseRepository(session)
+        repo = SQLExpenseRepository(session)
 
         # 1. Create Data
         me = User(username="Galfridus")
@@ -119,7 +131,7 @@ def demo_relationship():
 
 
 def main():
-    demo_relationship()
+    demo_relationship()  # pragma: no cover
 
 
 if __name__ == "__main__":

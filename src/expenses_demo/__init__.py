@@ -5,7 +5,7 @@ from .expenses import (
     Expense as Expense,
 )
 from .expenses import (
-    ExpenseRepository as ExpenseRepository,
+    SQLExpenseRepository as SQLExpenseRepository,
 )
 from .expenses import (
     User as User,
@@ -17,7 +17,7 @@ from .expenses import (
 __all__ = [
     "Category",
     "Expense",
-    "ExpenseRepository",
+    "SQLExpenseRepository",
     "User",
     "demo_relationship",
 ]
